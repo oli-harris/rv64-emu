@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# RISC-V Test files
+riscv-tests/
+*.dump
