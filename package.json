@@ -8,11 +8,20 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest",
-    "testinst": "sh -c 'vitest run rv64ui --reporter=verbose --hideSkippedTests -t \"$0.elf\"'"
+    "testinst": "sh -c 'vitest run rv64ui --reporter=verbose --hideSkippedTests -t \"$0.elf\"'",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^26.6.5",
+    "eslint": "^10.13.0",
+    "eslint-config-prettier": "^10.1.8",
+    "jiti": "^2.7.0",
+    "prettier": "^3.9.10",
     "typescript": "~6.0.2",
+    "typescript-eslint": "^8.71.2",
     "vite": "^8.3.0",
     "vitest": "^5.0.5"
   }

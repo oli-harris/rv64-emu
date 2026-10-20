@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "target": "es2023",
+    "target": "esnext",
     "module": "esnext",
-    "lib": ["ES2023", "DOM"],
+    "lib": ["ESNext", "DOM"],
     "types": ["vite/client", "node"],
     "allowArbitraryExtensions": true,
     "skipLibCheck": true,
@@ -15,10 +15,11 @@
     "noEmit": true,
 
     /* Linting */
+    "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "test"]
+  "include": ["src", "test", "vite.config.ts", "eslint.config.ts"]
 }

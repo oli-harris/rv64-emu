@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import loadElf, {
-  isElf64,
-  isElfFile,
-  isLittleEndian,
-  parseElfHeader,
-} from "./loadElf";
+import loadElf, { isElf64, isElfFile, isLittleEndian, parseElfHeader } from "./loadElf";
 
 const VALID_ELF = {
   magic: [0x7f, 0x45, 0x4c, 0x46],
@@ -57,12 +52,8 @@ describe("isElfFile", () => {
   });
 
   it("rejects a wrong magic", () => {
-    expect(
-      isElfFile(new Uint8Array(makeElf({ magic: [0, 0x45, 0x4c, 0x46] }))),
-    ).toBe(false);
-    expect(
-      isElfFile(new Uint8Array(makeElf({ magic: [0x7f, 0x45, 0x4c, 0x47] }))),
-    ).toBe(false);
+    expect(isElfFile(new Uint8Array(makeElf({ magic: [0, 0x45, 0x4c, 0x46] })))).toBe(false);
+    expect(isElfFile(new Uint8Array(makeElf({ magic: [0x7f, 0x45, 0x4c, 0x47] })))).toBe(false);
   });
 
   it("rejects input shorter than the magic", () => {
@@ -109,18 +100,14 @@ describe("parseElfHeader", () => {
 
 describe("loadElf", () => {
   it("returns the entry point and program header data", () => {
-    const elf = loadElf(
-      makeElf({ entry: 0x80000000n, phnum: 2, size: 64 + 112 }),
-    );
+    const elf = loadElf(makeElf({ entry: 0x80000000n, phnum: 2, size: 64 + 112 }));
 
     expect(elf.entry).toBe(0x80000000n);
     expect(elf.data.byteLength).toBe(56 * 2);
   });
 
   it("throws for wrong magic number", () => {
-    expect(() => loadElf(makeElf({ magic: [0, 0, 0, 0] }))).toThrow(
-      /not an ELF/,
-    );
+    expect(() => loadElf(makeElf({ magic: [0, 0, 0, 0] }))).toThrow(/not an ELF/);
   });
 
   it("throws for a file too small for a header", () => {
