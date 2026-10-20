@@ -1,45 +1,59 @@
-import Memory from "./memory";
-
-type Instruction = {
-  opcode: number;
-};
+import type { DecodedInstruction } from "./encoding";
+import type { Extension } from "./extensions/extension";
+import RV64i from "./extensions/rv64i";
+import type Memory from "./memory";
 
 export default class Hart {
   memory: Memory;
   registers: ArrayBuffer;
-  programCounter: bigint;
+  programCounter: number;
+  extensions: Extension[] = [new RV64i()];
 
-  constructor(memorySize: bigint) {
-    this.memory = new Memory(memorySize);
-    this.registers = new ArrayBuffer(4 * 32);
-    this.programCounter = BigInt(0);
+  constructor(memory: Memory, entry: number = 0) {
+    this.memory = memory;
+    this.registers = new ArrayBuffer(8 * 32);
+    this.programCounter = entry;
   }
 
-  loadBinary(binary: ArrayBuffer, address: bigint) {
-    this.memory.loadBinary(binary, address);
+  setRegister(index: number, value: bigint) {
+    if (index === 0) return; // x0 is always zero
+    const view = new DataView(this.registers);
+    view.setBigUint64(index * 8, value, true);
+  }
+
+  getRegister(index: number): bigint {
+    const view = new DataView(this.registers);
+    return view.getBigUint64(index * 8, true);
   }
 
   fetchInstruction() {
     const instruction = this.memory.load32(this.programCounter);
-    this.programCounter += BigInt(4);
+    this.programCounter += 4;
     return instruction;
   }
 
-  decodeInstruction(instruction: number): Instruction {
-    const opcode = instruction & 0x7f; // Bits [6:0]
-    return {
-      opcode: opcode,
-    };
+  decodeInstruction(instruction: number): DecodedInstruction | null {
+    for (const extension of this.extensions) {
+      const decoded = extension.decode(instruction);
+      if (decoded) {
+        return decoded;
+      }
+    }
+    return null;
   }
 
-  executeInstruction(instruction: Instruction) {
-    console.log(instruction);
+  executeInstruction(decodedInstruction: DecodedInstruction) {
+    console.log(decodedInstruction);
   }
 
   step() {
     const instruction = this.fetchInstruction();
     const decodedInstruction = this.decodeInstruction(instruction);
-    this.executeInstruction(decodedInstruction);
+    if (decodedInstruction) {
+      this.executeInstruction(decodedInstruction);
+    } else {
+      throw new Error(`Unknown instruction: 0x${instruction.toString(16)}`);
+    }
   }
 
   runCycles(maxCycles: bigint) {
