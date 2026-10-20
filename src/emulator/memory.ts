@@ -1,118 +1,118 @@
 export default class Memory {
-  size: bigint;
+  size: number;
+  offset: number;
   buffer: ArrayBuffer;
   view: DataView;
 
-  constructor(size: bigint) {
-    this.size = size;
-    this.buffer = new ArrayBuffer(Number(size)); // support up to 2^53 - 1 bytes
+  constructor(size: number, offset: number = 0) {
+    this.size = size; // support up to 2^53 - 1 bytes
+    this.offset = offset;
+    this.buffer = new ArrayBuffer(this.size);
     this.view = new DataView(this.buffer);
   }
 
-  loadBinary(binary: ArrayBuffer, address: bigint): void {
-    const binaryLength = BigInt(binary.byteLength);
-    if (address < 0n || address + binaryLength > this.size) {
+  loadBinary(binary: ArrayBuffer, address: number): void {
+    if (address - this.offset < 0 || address - this.offset + binary.byteLength > this.size) {
       throw new RangeError("Memory access out of bounds");
     }
-
-    new Uint8Array(this.buffer).set(new Uint8Array(binary), Number(address));
+    new Uint8Array(this.buffer).set(new Uint8Array(binary), address - this.offset);
   }
 
   // Read operations
-  load8(address: bigint): number {
-    if (address < 0n || address >= this.size) {
+  load8(address: number): number {
+    if (address - this.offset < 0 || address - this.offset >= this.size) {
       throw new RangeError("Memory access out of bounds");
     }
 
-    return this.view.getInt8(Number(address));
+    return this.view.getInt8(address - this.offset);
   }
 
-  load16(address: bigint): number {
-    if (address < 0n || address + 1n >= this.size) {
+  load16(address: number): number {
+    if (address - this.offset < 0 || address - this.offset + 1 >= this.size) {
       throw new RangeError("Memory access out of bounds");
     }
 
-    return this.view.getInt16(Number(address), true);
+    return this.view.getInt16(address - this.offset, true);
   }
 
-  load32(address: bigint): number {
-    if (address < 0n || address + 3n >= this.size) {
+  load32(address: number): number {
+    if (address - this.offset < 0 || address - this.offset + 3 >= this.size) {
       throw new RangeError("Memory access out of bounds");
     }
 
-    return this.view.getInt32(Number(address), true);
+    return this.view.getInt32(address - this.offset, true);
   }
 
-  load64(address: bigint): bigint {
-    if (address < 0n || address + 7n >= this.size) {
+  load64(address: number): bigint {
+    if (address - this.offset < 0 || address - this.offset + 7 >= this.size) {
       throw new RangeError("Memory access out of bounds");
     }
 
-    return this.view.getBigInt64(Number(address), true);
+    return this.view.getBigInt64(address - this.offset, true);
   }
 
-  loadU8(address: bigint): number {
-    if (address < 0n || address >= this.size) {
+  loadU8(address: number): number {
+    if (address - this.offset < 0 || address - this.offset >= this.size) {
       throw new RangeError("Memory access out of bounds");
     }
 
-    return this.view.getUint8(Number(address));
+    return this.view.getUint8(address - this.offset);
   }
 
-  loadU16(address: bigint): number {
-    if (address < 0n || address + 1n >= this.size) {
+  loadU16(address: number): number {
+    if (address - this.offset < 0 || address - this.offset + 1 >= this.size) {
       throw new RangeError("Memory access out of bounds");
     }
 
-    return this.view.getUint16(Number(address), true);
+    return this.view.getUint16(address - this.offset, true);
   }
 
-  loadU32(address: bigint): number {
-    if (address < 0n || address + 3n >= this.size) {
+  loadU32(address: number): number {
+    if (address - this.offset < 0 || address - this.offset + 3 >= this.size) {
       throw new RangeError("Memory access out of bounds");
     }
 
-    return this.view.getUint32(Number(address), true);
+    return this.view.getUint32(address - this.offset, true);
   }
 
-  loadU64(address: bigint): bigint {
-    if (address < 0n || address + 7n >= this.size) {
+  loadU64(address: number): bigint {
+    if (address - this.offset < 0 || address - this.offset + 7 >= this.size) {
       throw new RangeError("Memory access out of bounds");
     }
 
-    return this.view.getBigUint64(Number(address), true);
+    return this.view.getBigUint64(address - this.offset, true);
   }
 
   // Write operations
-  store8(address: bigint, value: number) {
-    if (address < 0n || address >= this.size) {
+  store8(address: number, value: number) {
+    if (address - this.offset < 0 || address - this.offset >= this.size) {
       throw new RangeError("Memory access out of bounds");
     }
 
-    this.view.setInt8(Number(address), value);
+    this.view.setInt8(address - this.offset, value);
   }
 
-  store16(address: bigint, value: number) {
-    if (address < 0n || address + 1n >= this.size) {
+  store16(address: number, value: number) {
+    if (address - this.offset < 0 || address - this.offset + 1 >= this.size) {
       throw new RangeError("Memory access out of bounds");
     }
 
-    this.view.setInt16(Number(address), value, true);
+    this.view.setInt16(address - this.offset, value, true);
   }
 
-  store32(address: bigint, value: number) {
-    if (address < 0n || address + 3n >= this.size) {
+  store32(address: number, value: number) {
+    if (address - this.offset < 0 || address - this.offset + 3 >= this.size) {
       throw new RangeError("Memory access out of bounds");
     }
 
-    this.view.setInt32(Number(address), value, true);
+    this.view.setInt32(address - this.offset, value, true);
   }
 
-  store64(address: bigint, value: bigint) {
-    if (address < 0n || address + 7n >= this.size) {
+  store64(address: number, value: bigint) {
+    if (address - this.offset < 0 || address - this.offset + 7 >= this.size) {
       throw new RangeError("Memory access out of bounds");
     }
 
-    this.view.setBigUint64(Number(address), value, true);
+    this.view.setBigUint64(address - this.offset, value, true);
   }
 }
