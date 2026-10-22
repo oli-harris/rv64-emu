@@ -8,9 +8,25 @@ export type ELFHeader = {
   phnum: number;
 };
 
+export type Segment = {
+  vaddr: bigint;
+  data: ArrayBuffer;
+};
+
 export type ELF = {
   entry: bigint;
-  data: ArrayBuffer;
+  segments: Segment[];
+};
+
+export type ProgramHeader = {
+  type: number;
+  flags: number;
+  fileOffset: bigint;
+  vaddr: bigint;
+  paddr: bigint;
+  fileSize: bigint;
+  memSize: bigint;
+  align: bigint;
 };
 
 const ELF_MAGIC = [0x7f, 0x45, 0x4c, 0x46];
@@ -19,6 +35,7 @@ const ELFCLASS64 = 2;
 const ELFDATA2LSB = 1;
 const ET_EXEC = 2;
 const EM_RISCV = 0xf3;
+const PT_LOAD = 1;
 
 export function isElfFile(bytes: Uint8Array): boolean {
   if (bytes.length < ELF_MAGIC.length) {
@@ -51,6 +68,35 @@ export function parseElfHeader(bytes: Uint8Array): ELFHeader {
   };
 }
 
+export function parseProgramHeaders(
+  bytes: Uint8Array,
+  phoff: bigint,
+  phentsize: number,
+  phnum: number
+): ProgramHeader[] {
+  const programHeaders = bytes.buffer.slice(Number(phoff), Number(phoff) + phentsize * phnum);
+  const view = new DataView(programHeaders, 0, programHeaders.byteLength);
+
+  const headers: ProgramHeader[] = [];
+
+  for (let i = 0; i < phnum; i++) {
+    const offset = i * phentsize;
+
+    headers.push({
+      type: view.getUint32(offset, true),
+      flags: view.getUint32(offset + 4, true),
+      fileOffset: view.getBigUint64(offset + 8, true),
+      vaddr: view.getBigUint64(offset + 16, true),
+      paddr: view.getBigUint64(offset + 24, true),
+      fileSize: view.getBigUint64(offset + 32, true),
+      memSize: view.getBigUint64(offset + 40, true),
+      align: view.getBigUint64(offset + 48, true),
+    });
+  }
+
+  return headers;
+}
+
 export default function loadElf(file: ArrayBuffer): ELF {
   const bytes = new Uint8Array(file);
 
@@ -80,15 +126,28 @@ export default function loadElf(file: ArrayBuffer): ELF {
     throw new Error(`Unsupported ELF type: ${header.type}`);
   }
 
-  const start = Number(header.phoff);
-  const end = start + header.phentsize * header.phnum;
+  const programHeaders = parseProgramHeaders(bytes, header.phoff, header.phentsize, header.phnum);
+  const segments: Segment[] = [];
 
-  if (end > file.byteLength) {
-    throw new Error("Program header table extends past end of file.");
+  for (const programHeader of programHeaders) {
+    if (programHeader.type === PT_LOAD) {
+      const segmentData = file.slice(
+        Number(programHeader.fileOffset),
+        Number(programHeader.fileOffset + programHeader.fileSize)
+      );
+      segments.push({
+        vaddr: programHeader.vaddr,
+        data: segmentData,
+      });
+    }
+  }
+
+  if (segments.length === 0) {
+    throw new Error("ELF file does not contain any loadable segments.");
   }
 
   return {
     entry: header.entry,
-    data: file.slice(start, end),
+    segments: segments,
   };
 }

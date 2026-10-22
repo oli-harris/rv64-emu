@@ -52,7 +52,9 @@ export default class Hart {
     if (decodedInstruction) {
       this.executeInstruction(decodedInstruction);
     } else {
-      throw new Error(`Unknown instruction: 0x${instruction.toString(16)}`);
+      throw new Error(
+        `Unknown instruction: 0x${instruction.toString(16)} at PC: 0x${(this.programCounter - 4).toString(16)}`
+      );
     }
   }
 
